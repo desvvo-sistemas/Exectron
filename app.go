@@ -193,6 +193,16 @@ func (a *App) emitProgress(scope string, message string) {
 	})
 }
 
+// jsonSlice devolve um slice nao-nil. Um slice nil vira `null` no JSON, e o
+// frontend chama `.length` direto no retorno dos metodos: numa base recem
+// criada, sem nenhum perfil salvo, isso derrubava a tela inicial inteira.
+func jsonSlice[T any](items []T) []T {
+	if items == nil {
+		return []T{}
+	}
+	return items
+}
+
 func (a *App) GetCommandPresets() []CommandPreset {
 	return []CommandPreset{
 		{Label: "Node - npm run dev", Command: "npm run dev", Runtime: "node"},
@@ -357,7 +367,7 @@ func (a *App) FindAppSettings(projectPath string) ([]string, error) {
 		}
 		return nil
 	})
-	return files, err
+	return jsonSlice(files), err
 }
 
 func (a *App) LoadAppSettingsEntries(path string) ([]AppSettingEntry, error) {
@@ -368,7 +378,7 @@ func (a *App) LoadAppSettingsEntries(path string) ([]AppSettingEntry, error) {
 	_ = data
 	var entries []AppSettingEntry
 	flattenSettings("", settings, &entries)
-	return entries, nil
+	return jsonSlice(entries), nil
 }
 
 func (a *App) SaveAppSettingsEntry(path string, entry AppSettingEntry) ([]AppSettingEntry, error) {
@@ -393,7 +403,7 @@ func (a *App) SaveAppSettingsEntry(path string, entry AppSettingEntry) ([]AppSet
 func (a *App) ListConfigs() ([]ProjectConfig, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	return append([]ProjectConfig(nil), a.configs...), nil
+	return jsonSlice(append([]ProjectConfig(nil), a.configs...)), nil
 }
 
 func (a *App) SaveConfig(config ProjectConfig) ([]ProjectConfig, error) {
@@ -451,7 +461,7 @@ func (a *App) SaveConfig(config ProjectConfig) ([]ProjectConfig, error) {
 	if !replaced {
 		a.configs = append(a.configs, config)
 	}
-	return append([]ProjectConfig(nil), a.configs...), a.saveConfigsLocked()
+	return jsonSlice(append([]ProjectConfig(nil), a.configs...)), a.saveConfigsLocked()
 }
 
 func (a *App) DeleteConfig(id string) ([]ProjectConfig, error) {
@@ -465,7 +475,7 @@ func (a *App) DeleteConfig(id string) ([]ProjectConfig, error) {
 		}
 	}
 	a.configs = next
-	return append([]ProjectConfig(nil), a.configs...), a.saveConfigsLocked()
+	return jsonSlice(append([]ProjectConfig(nil), a.configs...)), a.saveConfigsLocked()
 }
 
 func (a *App) Start(config ProjectConfig) (ProcessStatus, error) {
@@ -674,8 +684,8 @@ func (a *App) GetNodeInfo() NodeInfo {
 	}
 
 	info := NodeInfo{
-		InstalledVersions: installed,
-		AvailableVersions: available,
+		InstalledVersions: jsonSlice(installed),
+		AvailableVersions: jsonSlice(available),
 		ManagedDirectory:  nodeVersionsDir(),
 	}
 

@@ -147,11 +147,8 @@ func copyZipEntry(file *zip.File, target string) error {
 // ------------------------------------------------------- atalhos e registro
 
 func registerApplication(installDir string, binaryPath string) error {
-	iconPath := filepath.Join(installDir, appSlug+".png")
-	if _, err := os.Stat(iconPath); err != nil {
-		iconPath = binaryPath
-	}
-
+	// O atalho e a entrada de desinstalacao apontam para o executavel: o icone
+	// esta embutido nele como recurso, entao nao ha arquivo de imagem a indicar.
 	startMenu := filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs")
 	if err := createShortcut(filepath.Join(startMenu, appName+".lnk"), binaryPath, installDir); err != nil {
 		return err
@@ -164,7 +161,7 @@ func registerApplication(installDir string, binaryPath string) error {
 	entries := [][]string{
 		{"DisplayName", "REG_SZ", appName},
 		{"DisplayVersion", "REG_SZ", appVersion},
-		{"Publisher", "REG_SZ", "Exectron Open Source"},
+		{"Publisher", "REG_SZ", "desvvo-sistemas"},
 		{"InstallLocation", "REG_SZ", installDir},
 		{"DisplayIcon", "REG_SZ", binaryPath},
 		{"UninstallString", "REG_SZ", `"` + uninstaller + `" --uninstall`},
