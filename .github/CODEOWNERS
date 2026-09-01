@@ -1,0 +1,10 @@
+# Donos do codigo do Exectron.
+#
+# A regra "Require review from Code Owners" no ruleset da main aponta para este
+# arquivo: todo pull request precisa da aprovacao de um destes owners antes do
+# merge. Sao os owners da organizacao desvvo-sistemas.
+#
+# Quem entrar ou sair da lista de owners precisa ser refletido aqui: o GitHub
+# ignora quem nao tem acesso de escrita ao repositorio.
+
+*   @10Glauber01 @Angelotravain @ElcioCuranishi @ito78x @pdrummondf
