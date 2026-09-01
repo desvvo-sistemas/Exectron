@@ -73,6 +73,11 @@ git push -u origin corrige-deteccao-de-porta
 gh pr create --fill
 ```
 
+O CI de um pull request vindo de fork **precisa ser liberado por um mantenedor**
+antes de rodar — é o que impede alguém de fora gerar artefatos ou consumir os
+runners da organização sem revisão. Não é nada contra a sua contribuição: só
+abra o PR e aguarde a liberação.
+
 - Mensagens de commit no imperativo e em português: `corrige detecção de porta
   no Linux`, não `corrigindo` nem `fixed`.
 - Um PR por assunto. Refatoração e correção de bug em PRs separados.
