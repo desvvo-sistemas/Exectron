@@ -271,3 +271,8 @@ func linkManagedNodeBinaries(nodeBin string) error {
 	}
 	return nil
 }
+
+// applyShellCmdLine so existe por causa do Windows, onde a linha do cmd.exe
+// precisa ir pronta para o CreateProcess. No Linux o exec.Command ja passa o
+// comando como argumento unico do sh, sem reescape.
+func applyShellCmdLine(cmd *exec.Cmd, commandLine string) {}

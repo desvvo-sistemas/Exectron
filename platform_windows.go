@@ -280,3 +280,17 @@ func withManagedNodeFirst(currentPath string, nodeBin string) string {
 	}
 	return strings.Join(parts, string(os.PathListSeparator))
 }
+
+// applyShellCmdLine entrega ao CreateProcess a linha exata do shell. Sem isso o
+// Go reescapa as aspas do comando como \" ao montar a linha, e o cmd.exe, que
+// nao desescapa essa forma, repassa o caminho com aspas literais para o
+// programa chamado. O contrato esta espelhado em platform_linux.go.
+func applyShellCmdLine(cmd *exec.Cmd, commandLine string) {
+	if cmd == nil {
+		return
+	}
+	if cmd.SysProcAttr == nil {
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	cmd.SysProcAttr.CmdLine = shellName() + " " + shellFlag() + " " + commandLine
+}

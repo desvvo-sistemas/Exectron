@@ -545,6 +545,7 @@ func (a *App) Start(config ProjectConfig) (ProcessStatus, error) {
 	cmd := exec.Command(shellName(), shellFlag(), commandLine)
 	cmd.Dir = runDirectory(config)
 	cmd.SysProcAttr = processGroupAttr()
+	applyShellCmdLine(cmd, commandLine)
 	cmd.Env = a.processEnvironment(config)
 
 	stdout, err := cmd.StdoutPipe()
@@ -1711,7 +1712,10 @@ func runShort(name string, args ...string) (string, error) {
 func runShellShort(command string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	output, err := exec.CommandContext(ctx, shellName(), shellFlag(), command).CombinedOutput()
+	cmd := exec.CommandContext(ctx, shellName(), shellFlag(), command)
+	cmd.SysProcAttr = hiddenProcessAttr()
+	applyShellCmdLine(cmd, command)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(output), fmt.Errorf("%w: %s", err, strings.TrimSpace(string(output)))
 	}
