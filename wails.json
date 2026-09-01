@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "exectron",
+  "outputfilename": "exectron",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Angelotravain",
+    "email": "angelotravain96@gmail.com"
+  },
+  "info": {
+    "companyName": "Exectron",
+    "productName": "Exectron",
+    "productVersion": "1.0.0",
+    "copyright": "Exectron Open Source",
+    "comments": "Runner local de projetos, Node e containers"
+  }
+}
