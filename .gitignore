@@ -1,3 +1,22 @@
-build/bin
-node_modules
-frontend/dist
+# Saida de compilacao
+build/bin/
+dist/
+*.syso
+*.exe
+!scripts/*.exe
+
+# Payload do instalador: gerado por scripts/package.sh a cada empacotamento
+installer/payload/*
+!installer/payload/.gitkeep
+installer/exectron-installer
+installer/exectron-installer.exe
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Editores e sistema
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

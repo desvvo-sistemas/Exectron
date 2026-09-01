@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: go.sum
+
+      - name: Dependências nativas (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev \
+            libayatana-appindicator3-dev
+
+      - name: gofmt
+        shell: bash
+        run: |
+          unformatted="$(gofmt -l . | grep -v '^frontend/' || true)"
+          if [ -n "$unformatted" ]; then
+            echo "Arquivos fora do gofmt:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test ./...
+
+  installer:
+    name: Instalador (cross-compile)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false
+
+      # O payload real sai de scripts/package.sh. Aqui só interessa compilar o
+      # instalador, então um payload de mentira basta para satisfazer o go:embed.
+      - name: Payload de teste
+        run: |
+          printf 'placeholder' | gzip -9 > installer/payload/app.gz
+          cp build/linux/icon-256.png installer/payload/icon.png
+
+      - name: gofmt
+        working-directory: installer
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "Arquivos fora do gofmt:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: go vet
+        working-directory: installer
+        run: go vet ./...
+
+      - name: Compila para Windows e Linux
+        working-directory: installer
+        run: |
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/setup.exe .
+          GOOS=linux   GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/setup .
+
+  app:
+    name: Build do aplicativo (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: linux/amd64
+          - os: windows-latest
+            target: windows/amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Dependências nativas (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev \
+            libayatana-appindicator3-dev
+
+      - name: CLI do Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+
+      - name: wails build
+        run: wails build -platform ${{ matrix.target }}

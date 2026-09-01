@@ -1,0 +1,48 @@
+name: Reportar bug
+description: Algo não funciona como deveria
+labels: [bug]
+body:
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu
+      description: Descreva o problema e o que você esperava que acontecesse.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproducao
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Criar um perfil apontando para ...
+        2. Clicar em Start
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: so
+    attributes:
+      label: Sistema operacional
+      options:
+        - Windows 10
+        - Windows 11
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do Exectron
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Saída do console
+      description: Se o problema é num processo, cole a saída da aba dele.
+      render: shell

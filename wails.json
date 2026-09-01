@@ -11,10 +11,10 @@
     "email": "angelotravain96@gmail.com"
   },
   "info": {
-    "companyName": "Exectron",
+    "companyName": "desvvo-sistemas",
     "productName": "Exectron",
     "productVersion": "1.0.0",
-    "copyright": "Exectron Open Source",
+    "copyright": "MIT License - desvvo-sistemas",
     "comments": "Runner local de projetos, Node e containers"
   }
 }

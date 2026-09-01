@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Dúvida de uso
+    url: https://github.com/desvvo-sistemas/Exectron/discussions
+    about: Para perguntas sobre como usar o Exectron, prefira as Discussions.

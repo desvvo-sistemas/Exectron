@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da release (ex.: v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Instalador Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: CLI do Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+
+      - name: Compila o aplicativo
+        run: wails build -platform windows/amd64
+
+      # O empacotamento é o mesmo de scripts/package.sh, só que sem o container:
+      # o runner já é Windows, então o binário sai direto.
+      - name: Empacota o instalador
+        shell: bash
+        run: |
+          mkdir -p dist installer/payload
+          gzip -9 -c build/bin/exectron.exe > installer/payload/app.gz
+          cp build/linux/icon-256.png installer/payload/icon.png
+          cd installer
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
+            go build -trimpath -ldflags "-s -w" -o ../dist/exectron-setup-windows-amd64.exe .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exectron-setup-windows-amd64
+          path: dist/exectron-setup-windows-amd64.exe
+          if-no-files-found: error
+
+  linux:
+    name: Instalador Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: go.sum
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # O runner já é Linux com as bibliotecas nativas disponíveis, então aqui
+      # não é preciso o container de build/linux/Dockerfile.build.
+      - name: Dependências nativas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.0-dev \
+            libayatana-appindicator3-dev
+
+      - name: CLI do Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+
+      - name: Compila o aplicativo
+        run: wails build -platform linux/amd64 -o exectron
+
+      - name: Empacota o instalador
+        run: |
+          mkdir -p dist installer/payload
+          gzip -9 -c build/bin/exectron > installer/payload/app.gz
+          cp build/linux/icon-256.png installer/payload/icon.png
+          cd installer
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+            go build -trimpath -ldflags "-s -w" -o ../dist/exectron-setup-linux-amd64 .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exectron-setup-linux-amd64
+          path: dist/exectron-setup-linux-amd64
+          if-no-files-found: error
+
+  publish:
+    name: Publica a release
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          chmod +x exectron-setup-linux-amd64
+          sha256sum exectron-setup-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          draft: false
+          generate_release_notes: true
+          files: |
+            dist/exectron-setup-windows-amd64.exe
+            dist/exectron-setup-linux-amd64
+            dist/SHA256SUMS.txt

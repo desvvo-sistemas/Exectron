@@ -1,0 +1,8 @@
+# Normaliza os finais de linha: o repositorio guarda LF sempre.
+# O gofmt so aceita LF, entao um checkout com CRLF quebraria a verificacao.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.woff2 binary
+*.gz binary
