@@ -43,6 +43,9 @@ jobs:
           gzip -9 -c build/bin/exectron.exe > installer/payload/app.gz
           cp build/linux/icon-256.png installer/payload/icon.png
           cd installer
+          # Sem o .syso o setup.exe sai com o icone generico do Windows.
+          go run github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.1 \
+            -o resource_windows.syso versioninfo.json
           GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
             go build -trimpath -ldflags "-s -w" -o ../dist/exectron-setup-windows-amd64.exe .
 

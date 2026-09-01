@@ -19,6 +19,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST="$ROOT/dist"
 PAYLOAD="$ROOT/installer/payload"
 IMAGE="exectron-linux-build:latest"
+GOVERSIONINFO="github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.1"
 
 cd "$ROOT"
 mkdir -p "$DIST" "$PAYLOAD"
@@ -66,12 +67,22 @@ build_app_linux() {
   cp "$DIST/exectron-linux-amd64" "$PAYLOAD/app"
 }
 
+# windows_resources gera o .syso com icone e metadados de versao do instalador.
+# Sem isso o setup.exe sai com o icone generico do Windows. O sufixo _windows no
+# nome do arquivo faz o Go linkar o recurso apenas no alvo Windows.
+windows_resources() {
+  log "Gerando o icone e os metadados do instalador"
+  ( cd installer && go run "$GOVERSIONINFO" -o resource_windows.syso versioninfo.json )
+}
+
 pack() {
   local goos="$1" out="$2"
   log "Empacotando o instalador para $goos"
   gzip -9 -c "$PAYLOAD/app" > "$PAYLOAD/app.gz"
   rm -f "$PAYLOAD/app"
   cp "build/linux/icon-256.png" "$PAYLOAD/icon.png"
+
+  if [ "$goos" = "windows" ]; then windows_resources; fi
 
   ( cd installer && GOOS="$goos" GOARCH=amd64 CGO_ENABLED=0 \
       go build -trimpath -ldflags "-s -w" -o "$DIST/$out" . )

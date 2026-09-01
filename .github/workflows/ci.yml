@@ -153,6 +153,10 @@ jobs:
           fi
           cp build/linux/icon-256.png installer/payload/icon.png
           cd installer
+          # Sem o .syso o setup.exe sai com o icone generico do Windows.
+          if [ "$GOOS" = "windows" ]; then
+            go run github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.1 -o resource_windows.syso versioninfo.json
+          fi
           GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../dist/$out" .
 
       # Executaveis de cada build ficam disponiveis para download por 14 dias.

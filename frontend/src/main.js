@@ -432,9 +432,11 @@ document.querySelector('#app').innerHTML = `
 const el = (id) => document.getElementById(id);
 
 async function boot() {
-  state.presets = await GetCommandPresets();
-  state.configs = await ListConfigs();
-  state.node = await GetNodeInfo();
+  // Um slice vazio do Go pode chegar como null: normalizamos na entrada para
+  // nenhuma tela precisar se defender disso depois.
+  state.presets = (await GetCommandPresets()) || [];
+  state.configs = (await ListConfigs()) || [];
+  state.node = (await GetNodeInfo()) || null;
   renderPresets();
   renderNode();
   renderProgress();
@@ -789,7 +791,7 @@ async function saveTreeValue(path, value) {
 /* ---------------------------------------------------------------- execucao */
 
 async function refreshStatus() {
-  state.statuses = await GetStatuses();
+  state.statuses = (await GetStatuses()) || [];
   renderStatus();
 }
 
@@ -1225,7 +1227,7 @@ el('pickPath').addEventListener('click', async () => {
   renderRunnerHint();
   if (el('runtime').value === 'dotnet') {
     await runAction(async () => {
-      state.solutions = await FindDotnetProjects(path);
+      state.solutions = (await FindDotnetProjects(path)) || [];
       if (!state.solutions.length) throw new Error('nenhum .csproj encontrado nessa pasta');
       renderSolutions(state.solutions[0] || '');
     }, 'Projetos .NET pesquisados.');
@@ -1236,7 +1238,7 @@ el('pickPath').addEventListener('click', async () => {
 });
 
 el('scanProjects').addEventListener('click', () => runAction(async () => {
-  state.solutions = await FindDotnetProjects(el('path').value.trim());
+  state.solutions = (await FindDotnetProjects(el('path').value.trim())) || [];
   if (!state.solutions.length) throw new Error('nenhum .csproj encontrado nessa pasta');
   renderSolutions(state.solutions[0] || '');
 }, 'Projetos .NET pesquisados.'));
@@ -1251,7 +1253,7 @@ el('pickProjectFile').addEventListener('click', () => runAction(async () => {
 }, 'Projeto .NET selecionado.'));
 
 el('scanAppSettings').addEventListener('click', () => runAction(async () => {
-  state.appSettingsFiles = await FindAppSettings(el('path').value.trim());
+  state.appSettingsFiles = (await FindAppSettings(el('path').value.trim())) || [];
   if (!state.appSettingsFiles.length) throw new Error('nenhum appsettings encontrado nessa pasta');
   await loadSettingsTree(state.appSettingsFiles[0]);
   switchProjectTab('appsettings');
@@ -1399,7 +1401,7 @@ async function scanDockerFiles() {
 async function loadComposeServices() {
   const file = el('dockerCompose').value;
   if (!file) throw new Error('selecione o arquivo compose');
-  state.docker.services = await ListComposeServices(file);
+  state.docker.services = (await ListComposeServices(file)) || [];
   renderOptions('dockerService', state.docker.services, '', 'Todos os servicos');
 }
 
