@@ -96,9 +96,18 @@ no instalador nem no aplicativo. Rodando o script em uma máquina Linux que já
 tenha essas bibliotecas, dá para trocar a chamada do container por um
 `wails build -platform linux/amd64` direto.
 
-Os mesmos artefatos saem do CI: o workflow
-[`release.yml`](.github/workflows/release.yml) compila os dois instaladores e
-anexa à release quando uma tag `v*` é publicada.
+Os mesmos artefatos saem do CI:
+
+- [`ci.yml`](.github/workflows/ci.yml) roda a cada push e pull request. Além de
+  `gofmt`, `go vet` e `go test`, ele monta os dois instaladores e os guarda como
+  artefato do build por 14 dias — dá para baixar de qualquer PR.
+- [`release.yml`](.github/workflows/release.yml) roda quando uma tag `v*` é
+  publicada: compila os dois instaladores, gera o `SHA256SUMS.txt` e anexa tudo
+  à [Release](https://github.com/desvvo-sistemas/Exectron/releases).
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0   # publica a release com os instaladores
+```
 
 ## Desenvolvimento
 

@@ -63,6 +63,16 @@ aplicativo. Um PR que quebra o CI não é revisado até voltar ao verde.
 
 ## Commits e PRs
 
+A branch `main` é protegida: **não há push direto**. Toda mudança entra por pull
+request, com o CI verde. Force push e exclusão da branch estão bloqueados.
+
+```bash
+git checkout -b corrige-deteccao-de-porta
+# ... suas mudanças ...
+git push -u origin corrige-deteccao-de-porta
+gh pr create --fill
+```
+
 - Mensagens de commit no imperativo e em português: `corrige detecção de porta
   no Linux`, não `corrigindo` nem `fixed`.
 - Um PR por assunto. Refatoração e correção de bug em PRs separados.

@@ -84,7 +84,7 @@ jobs:
           GOOS=linux   GOARCH=amd64 CGO_ENABLED=0 go build -o /tmp/setup .
 
   app:
-    name: Build do aplicativo (${{ matrix.target }})
+    name: Instalador (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -92,8 +92,10 @@ jobs:
         include:
           - os: ubuntu-22.04
             target: linux/amd64
+            artifact: linux-amd64
           - os: windows-latest
             target: windows/amd64
+            artifact: windows-amd64
     steps:
       - uses: actions/checkout@v4
 
@@ -119,3 +121,31 @@ jobs:
 
       - name: wails build
         run: wails build -platform ${{ matrix.target }}
+
+      # Mesmo empacotamento de scripts/package.sh, sem o container: o runner ja
+      # e da plataforma alvo, entao o binario sai direto.
+      - name: Empacota o instalador
+        shell: bash
+        run: |
+          mkdir -p dist installer/payload
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            gzip -9 -c build/bin/exectron.exe > installer/payload/app.gz
+            out=exectron-setup-windows-amd64.exe
+            export GOOS=windows
+          else
+            gzip -9 -c build/bin/exectron > installer/payload/app.gz
+            out=exectron-setup-linux-amd64
+            export GOOS=linux
+          fi
+          cp build/linux/icon-256.png installer/payload/icon.png
+          cd installer
+          GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o "../dist/$out" .
+
+      # Executaveis de cada build ficam disponiveis para download por 14 dias.
+      # A publicacao em Releases e feita pelo release.yml, na tag.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exectron-setup-${{ matrix.artifact }}
+          path: dist/exectron-setup-*
+          if-no-files-found: error
+          retention-days: 14
